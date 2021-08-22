@@ -30,17 +30,19 @@ def wellesley_crawl():
     total = every_courses.__len__()
     logging.info("TOTAL " + str(total))
 
+    click_count = 0
     #클릭하고 해당 과목 크롤링
     for i in every_courses:
         i.click()
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#data_{} > div'.format(count))))
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        code = soup.select_one('#data_{} > div.coursedetail > div:nth-child(2)'.format(count)).text[5:10]
-        course_name = soup.select_one('.coursename_big > p'.format(count)).text
-        credit = soup.select_one('#data_{} > div.coursedetail > div:nth-child(2)'.format(count)).text[26:27]
-        data = [code, course_name, credit]
+    
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    courses = soup.select('.courseitem')
+    for course in courses:    
+        code_cred = course.select_one('.coursedetail > div:nth-child(2)')
+        course_name = course.select_one('.coursename_big > p').text
+        data = [code_cred, course_name]
         #비어 있을 가능성이 있는 정보들
-        prof = soup.select_one('#data_{} > a'.format(count))
+        prof = course.select_one('a')
         location = soup.select_one('#data_{} > div.coursedetail.col-xs-12 > div:nth-child(3) > a'.format(count))
         time = soup.select_one('#data_{} > div.coursedetail.col-xs-12 > div:nth-child(3)'.format(count))
         if prof:
@@ -63,9 +65,11 @@ def wellesley_crawl():
         result.append(data)
 
     #2차원 배열 -> .xlsx    
-    col_name=['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
+    col_name=['Code_Cred', 'Course Name', 'Professor', 'Room', 'Time']
     wellesley = pd.DataFrame(result, columns=col_name)
     wellesley['Time'] = wellesley['Time'].str.findall(pat='[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+')
-    wellesley.to_excel('wellesley.xlsx')
+    wellesley['Code'] = wellesley['Code_Cred'].str.slice(5,10)
+    wellesley['Credit'] = wellesley['Code_Cred'].str.slice(26,27)
+    wellesley.to_excel('./crawl_results/wellesley1.xlsx')
 
 wellesley_crawl()

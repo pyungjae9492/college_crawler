@@ -14,8 +14,8 @@ logging.basicConfig(
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
 
-# options = webdriver.ChromeOptions()
-# options.add_argument('headless')
+options = webdriver.ChromeOptions()
+options.add_argument('headless')
 driver = webdriver.Chrome('chromedriver.exe')
 driver.implicitly_wait(3)
 driver.get('https://sis.uit.tufts.edu/psp/paprd/EMPLOYEE/EMPL/h/?tab=TFP_CLASS_SEARCH#search_results/term/2218/career/ALL/subject/course/attr/keyword/instructor')
@@ -50,4 +50,4 @@ col_name=['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
 tufts = pd.DataFrame(result, columns=col_name)
 tufts['Room'] = tufts['Room'].str.findall(pat='\n.+')
 tufts['Time'] = tufts['Time'].str.findall(pat='.+\n')
-tufts.to_excel('tufts.xlsx')
+tufts.to_excel('./crawl_results/tufts.xlsx')
