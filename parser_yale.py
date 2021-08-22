@@ -16,6 +16,8 @@ logging.basicConfig(
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
 
+
+
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
 driver = webdriver.Chrome('chromedriver.exe', options=options) # mac의 경우 chromedriver
@@ -67,3 +69,7 @@ print(exceptions)
 col_name=['Code', 'Course Name', 'Credit', 'Professor', 'Room_Time']
 yale = pd.DataFrame(result, columns=col_name)
 yale.to_excel('./crawl_results/yale.xlsx')
+
+
+
+
