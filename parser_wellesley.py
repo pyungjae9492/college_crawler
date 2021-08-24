@@ -43,7 +43,7 @@ def wellesley_crawl():
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         code = soup.select_one(
             f'#data_{ count } > div.coursedetail > div:nth-child(2)').text[5:10]
-        course_name = soup.select_one('#course_listing > section:nth-child(3) > div > a > div.coursename_big > p').text
+        course_name = soup.select_one(f'#course_listing > section:nth-child({ count + 3}) > div > a > div.coursename_big > p').text
         credit = soup.select_one(
             f'#data_{ count } > div.coursedetail > div:nth-child(2)').text[26:27]
         prof = soup.select_one(f'#data_{ count } > a')

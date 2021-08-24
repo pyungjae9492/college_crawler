@@ -9,6 +9,7 @@ import pandas as pd
 import logging
 import openpyxl
 
+#완료!
 
 def get_links():
     options = webdriver.ChromeOptions()
