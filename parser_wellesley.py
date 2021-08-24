@@ -40,36 +40,35 @@ def wellesley_crawl():
             (By.CSS_SELECTOR, f'#data_{ count } > div')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         code = soup.select_one(
-            '#data_{} > div.coursedetail > div:nth-child(2)'.format(count)).text[5:10]
-        course_name = soup.select_one('.coursename_big > p'.format(count)).text
+            f'#data_{ count } > div.coursedetail > div:nth-child(2)').text[5:10]
+        course_name = soup.select_one('#course_listing > section:nth-child(3) > div > a > div.coursename_big > p').text
         credit = soup.select_one(
-            '#data_{} > div.coursedetail > div:nth-child(2)'.format(count)).text[26:27]
-        data = [code, course_name, credit]
-        # 비어 있을 가능성이 있는 정보들
-        prof = soup.select_one('#data_{} > a'.format(count))
+            f'#data_{ count } > div.coursedetail > div:nth-child(2)').text[26:27]
+        prof = soup.select_one(f'#data_{ count } > a')
         location = soup.select_one(
-            '#data_{} > div.coursedetail.col-xs-12 > div:nth-child(3) > a'.format(count))
+            f'#data_{ count } > div.coursedetail.col-xs-12 > div:nth-child(3) > a')
         time = soup.select_one(
-            '#data_{} > div.coursedetail.col-xs-12 > div:nth-child(3)'.format(count))
+            f'#data_{ count } > div.coursedetail.col-xs-12 > div:nth-child(3)')
         if prof:
-            data.append(prof.text)
+            prof = prof.text
         else:
-            data.append('Not Noticed')
+            prof = 'Not Noticed'
         if location:
-            data.append(location.text)
+            location = location.text
         else:
-            data.append('Not Noticed')
+            location = 'Not Noticed'
         if time:
-            data.append(time.text)
+            time = time.text
         else:
-            data.append('Not Noticed')
-
+            time = 'Not Noticed'
+        data = [code, course_name, credit, prof, location, time]
         # 진행 상황 로깅
         count += 1
         logging.info("{:.2f}".format((count / total) * 100))
 
         result.append(data)
 
+    driver.quit()
     # 2차원 배열 -> .xlsx
     col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
     wellesley = pd.DataFrame(result, columns=col_name)

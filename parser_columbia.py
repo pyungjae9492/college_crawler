@@ -9,7 +9,6 @@ import pandas as pd
 import logging
 import openpyxl
 
-
 def get_links():
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
@@ -20,47 +19,40 @@ def get_links():
     WebDriverWait(driver, 20).until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, '#search-results > li:nth-child(1) > div > h3 > a')))
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    links = []
-    courses = soup.select('#search-results > li > div > h3 > a')
+    data = []
+    courses = soup.select('#search-results > li')
     for course in courses:
-        link = course.get('ng-href')
-        links.append(link)
-    return links
+        link = course.select_one('div > h3 > a').get('ng-href')
+        code = course.select_one('li > div > div:nth-child(3) > table > tbody > tr > td:nth-child(2)').text
+        prof = course.select_one('div > div:nth-child(3) > table > tbody > tr > td:nth-child(4)').text.strip()
+        course_name = course.select_one('div > h3 > a').text
+        data.append([link, code, prof, course_name])
+    driver.quit()
+    return data
 
 
-def get_content(link):
+def get_content(link, code, prof, course_name):
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
-    driver = webdriver.Chrome('chromedriver.exe', options=options)
+    driver = webdriver.Chrome('chromedriver.exe')
     driver.implicitly_wait(3)
     driver.get(link)
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located(
+    WebDriverWait(driver, 60).until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, '#col-right > table > tbody > tr:nth-child(3) > td:nth-child(2)')))
     second_row = driver.find_element_by_css_selector(
         '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(1)').text
     if second_row == 'Day & Time\nLocation':
-        code = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(3) > td:nth-child(2)').text
-        course_name = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(2) > td > b > font:nth-child(4)').text
         cred = driver.find_element_by_css_selector(
             '#col-right > table > tbody > tr:nth-child(5) > td:nth-child(2)').text
-        prof = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(8) > td:nth-child(2)').text
         meetings = driver.find_element_by_css_selector(
             '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(2)').text
         data = [code, course_name, cred, prof, meetings]
     else:
-        code = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(3) > td:nth-child(2)').text
-        course_name = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(2) > td > b > font:nth-child(4)').text
         cred = driver.find_element_by_css_selector(
             '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(2)').text
-        prof = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(7) > td:nth-child(2)').text
         meetings = 'TBA'
         data = [code, course_name, cred, prof, meetings]
+    driver.quit()
     return data
 
 
@@ -77,14 +69,15 @@ if __name__ == '__main__':
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
 
-    links = get_links()
-    total = len(links)
+    data = get_links()
+    test = [ data[0], data[1], data[2] ]
+    total = len(data)
     counter = 0
     logging.info('total:' + str(total))
     result = []
 
-    for link in links:
-        result.append(get_content(link))
+    for i in test:
+        result.append(get_content(i[0], i[1], i[2], i[3]))
         counter += 1
         logging.info("{:.2f}".format((counter / total) * 100))
 

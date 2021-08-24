@@ -53,6 +53,7 @@ for select_option in select_options:
     school_count += 1
     logging.info("{:.2f}".format((school_count / school_total) * 100))
 
+driver.quit()
 
 col_name = ['Course_Information', 'Schedule']
 bc = pd.DataFrame(result, columns=col_name)

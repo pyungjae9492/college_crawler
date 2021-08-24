@@ -33,6 +33,7 @@ def get_links():
         code = course.select_one('.class-info > div > small').text
         data = [link, name, code]
         links_names_codes.append(data)
+    driver.quit()
     return links_names_codes
 
 
@@ -47,6 +48,7 @@ def get_content(link, course_name, code):
     prof = driver.find_element_by_css_selector('.instructors > ul').text
     meetings = driver.find_element_by_css_selector('.class-meetings').text
     data = [code, course_name, prof, meetings]
+    driver.quit()
     return data
 
 

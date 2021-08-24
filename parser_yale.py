@@ -65,6 +65,7 @@ for course in courses:
     counter += 1
     logging.info("{:.2f}".format((counter / int(total)) * 100))
 
+driver.quit()
 print(exceptions)
 col_name=['Code', 'Course Name', 'Credit', 'Professor', 'Room_Time']
 yale = pd.DataFrame(result, columns=col_name)
