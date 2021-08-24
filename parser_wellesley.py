@@ -9,6 +9,8 @@ import pandas as pd
 import logging
 import openpyxl
 
+# 완료
+
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,

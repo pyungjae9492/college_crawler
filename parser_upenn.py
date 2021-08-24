@@ -19,7 +19,6 @@ urls = []
 for subject in subjects:
     urls.append(subject.get('href'))
 
-
 result = []
 counter = 0
 total = len(subjects)
@@ -29,17 +28,14 @@ for url in urls:
     req = requests.get(url)
     html = req.text
     soup = BeautifulSoup(html, 'html.parser')
-    courses = soup.select('.node')  
-    del courses[0]
-    for course in courses:
-        course_name = course.select_one('.title-coursedescr').text
-        sections = course.select('.sections')
-        for section in sections:
-            code = section.select_one('.class-numbers > p > strong').text.strip()
-            cred = section.select_one('.credit-val').text
-            prof_room_time = section.select_one('.meeting-pattern').text 
-            data = [code, course_name, cred, prof_room_time]
-            result.append(data)
+    course_name = course.select_one('.title-coursedescr').text
+    sections = course.select('.sections')
+    for section in sections:
+        code = section.select_one('.class-numbers > p > strong').text.strip()
+        cred = section.select_one('.credit-val').text
+        prof_room_time = section.select_one('.meeting-pattern').text 
+        data = [code, course_name, cred, prof_room_time]
+        result.append(data)
     counter += 1
     logging.info("{:.2f}".format((counter / total) * 100))
 
