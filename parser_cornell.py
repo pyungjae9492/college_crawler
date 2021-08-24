@@ -44,6 +44,5 @@ for subject in subjects:
 
 col_name=['Code', 'Course Name', 'Credit', 'Professor_Room_Time']
 cornell = pd.DataFrame(result, columns=col_name)
-# cornell = pd.read_csv('./crawl_results/cornell.xlsx')
 cornell['Professor'] = cornell.Professor_Room_Time.str.extract(r'(?<=[I][n][s][t][r][u][c][t][o][r][s])(.+)')
 cornell.to_excel('./crawl_results/cornell.xlsx')
