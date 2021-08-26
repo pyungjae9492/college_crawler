@@ -10,6 +10,7 @@ from time import sleep
 import pandas as pd
 import logging
 import openpyxl
+import re
 
 # 완료
 
@@ -20,10 +21,11 @@ logging.basicConfig(
 
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
-driver = webdriver.Chrome(
-    'chromedriver.exe', options=options)  # mac의 경우 chromedriver
+driver = webdriver.Chrome('chromedriver.exe')  # mac의 경우 chromedriver
 driver.implicitly_wait(3)
-driver.get('https://services.bc.edu/PublicCourseInfoSched/courseinfoschedResults!displayInput.action?authenticated=false&keyword=&presentTerm=2021SPRG&registrationTerm=2021FALL&termsString=2021SUMM%2C2021FALL&selectedTerm=2021FALL&selectedSort=default&selectedSchool=6CSOM&selectedSubject=nullAll&selectedNumberRange=All&selectedLevel=&selectedMeetingDay=All&selectedMeetingTime=All&selectedCourseStatus=All&selectedCourseCredit=All&canvasSearchLink=&personResponse=8dRFz5dHGWpnu6zWplj5dn8csF&googleSiteKey=6LdV2EYUAAAAACy8ROcSlHHznHJ64bn87jvDqwaf')
+driver.get('https://services.bc.edu/PublicCourseInfoSched/courseinfoschedResults!displayInput.action?authenticated=false&keyword=&presentTerm=2021SPRG&registrationTerm=2021FALL&termsString=2021SUMM%2C2021FALL&selectedTerm=2021FALL&selectedSort=&selectedSchool=6CSOM&selectedSubject=nullAll&selectedNumberRange=&selectedLevel=&selectedMeetingDay=&selectedMeetingTime=&selectedCourseStatus=&selectedCourseCredit=&canvasSearchLink=&personResponse=jddFR5zH8HGrzn2ljFjndc85sH&googleSiteKey=6LdV2EYUAAAAACy8ROcSlHHznHJ64bn87jvDqwaf')
+
+
 
 exceptions = 0
 result = []
@@ -44,10 +46,23 @@ for select_option in select_options:
     course_count = 0
     course_total = len(courses)
 
+
     for course in courses:
-        course_information = course.select_one('td:nth-child(1)').text
-        schedule = course.select_one('td:nth-child(2)').text
-        data = [course_information, schedule]
+        course_raw = course.select_one('td:nth-child(1)').text
+        schedule = course.select_one('.schedule')
+        days_list = schedule.select('.weekdisplay')
+        if days_list:
+            days = ''
+            if len(days_list) != 0:
+                for day in days_list:
+                    days += (day.text + ' ')
+            time = schedule.select_one('.time')
+            room = schedule.select_one('.locaton')
+        else:
+            days = 'TBA'
+            time = 'TBA'
+            room = 'TBA'
+        data = [course_raw, room, days, time]
         result.append(data)
         course_count += 1
         logging.info("{:.2f}".format((course_count / course_total) * 100))
@@ -64,6 +79,4 @@ bc['Course_Name'] = bc.Course_Information.str.extract(r'^.+(?=\s\()')
 bc['Credit'] = bc.Course_Information.str.extract(
     r'(?<=[cC][rR][eE][dD][iI][tT][sS]\:)[0-9]+(?=\n)')
 bc['Professor'] = bc.Course_Information.str.extract(r'')
-bc['Course_Name'] = bc.Course_Information.str.extract(r'')
-bc['Course_Name'] = bc.Course_Information.str.extract(r'')
 bc.to_excel('./crawl_results/bc.xlsx')

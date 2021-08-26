@@ -66,6 +66,12 @@ for value in values:
                     except:
                         room_time = 'TBA'
                     prof = driver.find_element_by_css_selector('.instructor-detail > div > h4').text
+                    if value == 'Half Credit':
+                        value = 0.5
+                    elif value == 'Full Credit':
+                        value = 1
+                    else:
+                        value = 2
                     data = [code, course_name, value, prof, room_time]
                     result.append(data)
                     section_num += 1

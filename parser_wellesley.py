@@ -72,11 +72,16 @@ def wellesley_crawl():
 
     driver.quit()
     # 2차원 배열 -> .xlsx
+    result = pd.read_excel('./crawl_results/wellesley(final).xlsx')
     col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
     wellesley = pd.DataFrame(result, columns=col_name)
+    wellesley['Days'] = wellesley.Time.str.extract(
+        r'(?<=\:\s)([MTWRFS]+)(?=\s\S\s)')
     wellesley['Time'] = wellesley.Time.str.extract(
-        r'([A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+)')
+        r'([0-9]+\:[0-9]+\s[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+)')
+    wellesley = wellesley[['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Days', 'Time']]
     wellesley.to_excel('./crawl_results/wellesley.xlsx')
+
 
 
 wellesley_crawl()

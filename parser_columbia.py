@@ -3,11 +3,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import bs4
-import time
+from time import sleep
 from bs4 import BeautifulSoup
 import pandas as pd
 import logging
 import openpyxl
+import requests
 
 def get_links():
     options = webdriver.ChromeOptions()
@@ -34,11 +35,16 @@ def get_links():
 def get_content(link, code, prof, course_name):
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
-    driver = webdriver.Chrome('chromedriver.exe')
+    driver = webdriver.Chrome('chromedriver.exe', options=options)
     driver.implicitly_wait(3)
     driver.get(link)
-    WebDriverWait(driver, 60).until(EC.presence_of_element_located(
-        (By.CSS_SELECTOR, '#col-right > table > tbody > tr:nth-child(3) > td:nth-child(2)')))
+    try:
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, '#col-right > table > tbody > tr:nth-child(9)')))
+    except:
+        sleep(5)
+        pass
+    
     second_row = driver.find_element_by_css_selector(
         '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(1)').text
     if second_row == 'Day & Time\nLocation':
@@ -70,13 +76,12 @@ if __name__ == '__main__':
         datefmt='%Y-%m-%d %H:%M:%S')
 
     data = get_links()
-    test = [ data[0], data[1], data[2] ]
     total = len(data)
     counter = 0
     logging.info('total:' + str(total))
     result = []
 
-    for i in test:
+    for i in data:
         result.append(get_content(i[0], i[1], i[2], i[3]))
         counter += 1
         logging.info("{:.2f}".format((counter / total) * 100))

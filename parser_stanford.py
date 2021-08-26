@@ -62,4 +62,5 @@ stanford['Days'] = stanford.Descriptions.str.extract(
     r'(?<=\d{2}\/\d{2}\/\d{4}\s.\s\d{2}\/\d{2}\/\d{4}\s)(.+)(?=\s\d+\:\d+\s.+\s\d+\:\d+\s)')
 stanford['Time'] = stanford.Descriptions.str.extract(
     r'([0-9]+\:[0-9]+.+[AP][M])')
+stanford = stanford[['Code', 'Course_Name', 'Credit', 'Professor', 'Room', 'Days', 'Time']]
 stanford.to_excel('./crawl_results/stanford.xlsx')

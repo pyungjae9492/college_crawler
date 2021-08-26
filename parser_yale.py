@@ -54,7 +54,7 @@ for course in courses:
         except:
             room_time = 'TBA'
         try:
-            prof = driver.find_element_by_css_selector('.instructor-detail > div > h4').text
+            prof = driver.find_element_by_css_selector('.instructor-name').text
         except:
             prof = 'TBA'
         data = [code, course_name, cred, prof, room_time]

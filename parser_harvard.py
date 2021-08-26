@@ -23,7 +23,7 @@ driver = webdriver.Chrome(
 driver.implicitly_wait(3)
 driver.get('https://courses.my.harvard.edu/psp/courses/EMPLOYEE/EMPL/h/?tab=HU_CLASS_SEARCH&SearchReqJSON=%7B%22ExcludeBracketed%22%3Atrue%2C%22PageNumber%22%3A1%2C%22PageSize%22%3A%22%22%2C%22SortOrder%22%3A%5B%22IS_SCL_DESCR_IS_SCL_DESCRJ%22%5D%2C%22Facets%22%3A%5B%22IS_SCL_DESCR_IS_SCL_DESCRH%3A2021%20Fall%3ATerm%22%5D%2C%22Category%22%3A%22HU_SCL_SCHEDULED_BRACKETED_COURSES%22%2C%22SearchPropertiesInResults%22%3Atrue%2C%22FacetsInResults%22%3Atrue%2C%22SaveRecent%22%3Atrue%2C%22TopN%22%3A%22%22%2C%22SearchText%22%3A%22*%22%2C%22DeepLink%22%3Afalse%7D')
 
-WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+WebDriverWait(driver, 30).until(EC.presence_of_element_located(
     (By.CSS_SELECTOR, '#IS_SCL_ResultsPlaceholder > div:nth-child(1)')))
 course_count = 0
 course_total = driver.find_element_by_css_selector(
@@ -33,7 +33,7 @@ result = []
 
 driver.find_element_by_css_selector(
     '#IS_SCL_ResultsPlaceholder > div:nth-child(1)').click()
-WebDriverWait(driver, 10).until(
+WebDriverWait(driver, 30).until(
     EC.presence_of_element_located((By.CSS_SELECTOR, '#lbContentMain')))
 
 while True:
@@ -54,8 +54,9 @@ while True:
     days_list = driver.find_elements_by_css_selector(
         '.isSCL_LBTop > div.isSCL_LBMTG > div.isSCL_LBRBM.isSCL_SecCompMTG > ul > li.selected')
     days = ''
-    for day in days_list:
-        days += (day.text + ',')
+    if len(days_list) != 0:
+        for day in days_list:
+            days += (day.text + ' ')
     time = driver.find_element_by_css_selector(
         '.isSCL_LBTop > div.isSCL_LBMTG > div.isSCL_LBTime').text
     data = [code, course_name, cred, prof, room, days, time]
@@ -65,13 +66,15 @@ while True:
     if course_count < int(course_total):
         driver.find_element_by_css_selector(
             '.isFSA_PrfHdr > a.isFSA_PrfHdrNext').click()
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, '.isFSA_PrfHdr > a.isFSA_PrfHdrNext')))
         continue
     break
 
-
 col_name = ['Code', 'Course_Name', 'Credit',
             'Professor', 'Room', 'Days', 'Time']
 harvard = pd.DataFrame(result, columns=col_name)
+harvard['Code'] = harvard.Code.str.extract(r'(?<=Class Number:)(.+)')
+harvard['Credit'] = harvard.Credit.str.extract(r'(?<=Units:)(.+)')
+harvard['Days'] = harvard.Days.str.extract(r'(.+)(?=,)')
 harvard.to_excel('./crawl_results/harvard.xlsx')

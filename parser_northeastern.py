@@ -93,4 +93,6 @@ while True:
 
 col_name = ['Code', 'Course Name', 'Cred', 'Professor', 'Room', 'Days', 'Time']
 northeastern = pd.DataFrame(result, columns=col_name)
+northeastern['Room'] = northeastern['Room'].str.strip()
+northeastern['Days'] = northeastern['Days'].str.slice(start=0, stop=-1)
 northeastern.to_excel('./crawl_results/northeastern.xlsx')

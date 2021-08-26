@@ -9,7 +9,7 @@ import pandas as pd
 import logging
 import openpyxl
 
-#완료!
+#완료! (날짜랑 장소가 2개인 것은 어떻게 할까?)
 
 def get_links():
     options = webdriver.ChromeOptions()
@@ -54,7 +54,7 @@ def get_content(link, course_name, code):
 
 
 def to_excel(result):
-    col_name = ['Code', 'Course Name', 'Professor', 'Meetings']
+    col_name = ['Code', 'Course_Name', 'Professor', 'Meetings']
     princeton = pd.DataFrame(result, columns=col_name)
     princeton.to_excel('./crawl_results/princeton.xlsx')
 

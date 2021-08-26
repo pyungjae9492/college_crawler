@@ -13,6 +13,8 @@ import asyncio
 import requests
 from functools import partial
 
+# 크롤링 막혀있음
+
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -39,10 +41,16 @@ counter = 0
 total = len(url_and_credits)
 logging.info("TOTAL " + str(total))
 
+headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'}
+
 for url_and_credit in url_and_credits:
     cred = url_and_credit[1][3]
     url = url_and_credit[0]
-    req = requests.get(url)
+    try:
+        req = requests.get(url, headers=headers)
+    except:
+        print('request denied!')
+        continue
     sleep(4)
     html = req.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -55,6 +63,8 @@ for url_and_credit in url_and_credits:
     counter += 1
     logging.info("{:.2f}".format((counter / total) * 100))
     result.append(data)
+    if counter < 25:
+        break
 
 col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
 bu = pd.DataFrame(result, columns=col_name)

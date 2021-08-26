@@ -27,20 +27,15 @@ for url in urls:
     req = requests.get(url)
     html = req.text
     soup = BeautifulSoup(html, 'html.parser')
-    course_name = course.select_one('.title-coursedescr').text
-    sections = course.select('.sections')
-    for section in sections:
-        code = section.select_one('.class-numbers > p > strong').text.strip()
-        cred = section.select_one('.credit-val').text
-        prof_room_time = section.select_one('.meeting-pattern').text 
-        data = [code, course_name, cred, prof_room_time]
+    text = soup.select_one('pre').select_one('p > p').text
+    courses = text.split('  \n \n')
+    for course in courses:
+        data = [course]
         result.append(data)
     counter += 1
     logging.info("{:.2f}".format((counter / total) * 100))
 
 
-col_name=['Code', 'Course Name', 'Credit', 'Professor_Room_Time']
+col_name=['Course_Data']
 upenn = pd.DataFrame(result, columns=col_name)
-# upenn = pd.read_csv('./crawl_results/upenn.xlsx')
-upenn['Professor'] = upenn.Professor_Room_Time.str.extract(r'(?<=[I][n][s][t][r][u][c][t][o][r][s])(.+)')
 upenn.to_excel('./crawl_results/upenn.xlsx')
