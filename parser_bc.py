@@ -23,7 +23,7 @@ options = webdriver.ChromeOptions()
 options.add_argument('headless')
 driver = webdriver.Chrome('chromedriver.exe')  # mac의 경우 chromedriver
 driver.implicitly_wait(3)
-driver.get('https://services.bc.edu/PublicCourseInfoSched/courseinfoschedResults!displayInput.action?authenticated=false&keyword=&presentTerm=2021SPRG&registrationTerm=2021FALL&termsString=2021SUMM%2C2021FALL&selectedTerm=2021FALL&selectedSort=&selectedSchool=6CSOM&selectedSubject=nullAll&selectedNumberRange=&selectedLevel=&selectedMeetingDay=&selectedMeetingTime=&selectedCourseStatus=&selectedCourseCredit=&canvasSearchLink=&personResponse=jddFR5zH8HGrzn2ljFjndc85sH&googleSiteKey=6LdV2EYUAAAAACy8ROcSlHHznHJ64bn87jvDqwaf')
+driver.get('https://services.bc.edu/PublicCourseInfoSched/courseinfoschedResults!displayInput.action?authenticated=false&keyword=&presentTerm=2021SPRG&registrationTerm=2021FALL&termsString=2021SUMM%2C2021FALL&selectedTerm=2021FALL&selectedSort=&selectedSchool=6CSOM&selectedSubject=nullAll&selectedNumberRange=&selectedLevel=&selectedMeetingDay=&selectedMeetingTime=&selectedCourseStatus=&selectedCourseCredit=&canvasSearchLink=&personResponse=jd2F8Wjcdc86u6uFR5RHpF8rsH&googleSiteKey=6LdV2EYUAAAAACy8ROcSlHHznHJ64bn87jvDqwaf')
 
 
 
@@ -49,20 +49,51 @@ for select_option in select_options:
 
     for course in courses:
         course_raw = course.select_one('td:nth-child(1)').text
-        schedule = course.select_one('.schedule')
-        days_list = schedule.select('.weekdisplay')
-        if days_list:
-            days = ''
-            if len(days_list) != 0:
-                for day in days_list:
-                    days += (day.text + ' ')
-            time = schedule.select_one('.time')
-            room = schedule.select_one('.locaton')
+        course_name = course.select_one('.course-name').text
+        if course.select_one('.instructors'):
+            prof = course.select_one('.instructors').text
         else:
-            days = 'TBA'
-            time = 'TBA'
-            room = 'TBA'
-        data = [course_raw, room, days, time]
+            prof = ''
+        schedule = course.select_one('.schedule')
+        week_list = schedule.select('.weekdisplay')
+        if week_list:
+            days1 = ''
+            days1_list = week_list[0].select('.meet')
+            for day in days1_list:
+                days1 += (day.text + ' ')
+            if schedule.select_one('.time'):
+                time1 = schedule.select_one('.time').text
+            else:
+                time1 = ''
+            if schedule.select_one('.location'):
+                room1 = schedule.select_one('.location').text
+            else:
+                room1 = ''
+            days2 = ''
+            time2 = ''
+            room2 = ''
+            if len(week_list) == 2:
+                days2_list = week_list[1].select('.meet')
+                for day in days2_list:
+                    days2 += (day.text + ' ')
+                if schedule.select_one('.time'):
+                    time2 = schedule.select_one('.time').text
+                else:
+                    time2 = ''
+                if schedule.select_one('.location'):
+                    room2 = schedule.select_one('.location').text
+                else:
+                    room2 = ''
+            data = [course_raw, course_name, prof, days1, time1, room1, days2, time2, room2]
+        else:
+            days1 = 'TBA'
+            time1 = 'TBA'
+            room1 = 'TBA'
+            days2 = ''
+            time2 = ''
+            room2 = ''
+            
+        data = [course_raw, course_name, prof, days1, time1, room1, days2, time2, room2]
         result.append(data)
         course_count += 1
         logging.info("{:.2f}".format((course_count / course_total) * 100))
@@ -72,11 +103,11 @@ for select_option in select_options:
 
 driver.quit()
 
-col_name = ['Course_Information', 'Schedule']
+col_name = ['Course_Information', 'Course_Name', 'Professor', 'Days1', 'Time1', 'Room1', 'Days2', 'Time2', 'Room2']
 bc = pd.DataFrame(result, columns=col_name)
 bc['Code'] = bc.Course_Information.str.extract(r'(?<=\()(.+)(?=\))')
-bc['Course_Name'] = bc.Course_Information.str.extract(r'^.+(?=\s\()')
+bc['Course_Name'] = bc.Course_Name.str.extract(r'^(.+)(?=\s\()')
 bc['Credit'] = bc.Course_Information.str.extract(
-    r'(?<=[cC][rR][eE][dD][iI][tT][sS]\:)[0-9]+(?=\n)')
-bc['Professor'] = bc.Course_Information.str.extract(r'')
+    r'(?<=[cC][rR][eE][dD][iI][tT][sS]\:)([0-9]+)(?=\n)')
+bc = bc[['Code', 'Course_Name', 'Credit', 'Professor', 'Days1', 'Time1', 'Room1', 'Days2', 'Time2', 'Room2']]
 bc.to_excel('./crawl_results/bc.xlsx')

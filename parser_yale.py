@@ -32,8 +32,8 @@ logging.info('total:' + total)
 courses = driver.find_elements_by_css_selector('.result__link')
 for course in courses:
     course.click()
-    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.dtl-course-code')))
-    sections = driver.find_elements_by_css_selector('.course-section')
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.dtl-course-code')))
+    sections = driver.find_elements_by_css_selector('.course-section--matched')
     section_num = 1
     exceptions = 0
     for section in sections:
@@ -42,19 +42,21 @@ for course in courses:
         else:
             try:
                 driver.find_element_by_css_selector(f'.course-sections > a:nth-child({ section_num })').click()
-                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.dtl-course-code')))
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.dtl-course-code')))
             except:
                 exceptions += 1
                 continue
-        course_name = driver.find_element_by_css_selector('.detail-title').text
-        code = driver.find_element_by_css_selector('.dtl-section').text
-        cred = driver.find_element_by_css_selector('.detail-credit_html').text[0]
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        content = soup.select_one('body > main > div.panel.panel--2x.panel--kind-details.panel--visible > div > div.panel__body')
+        course_name = content.select_one('.detail-title').text
+        code = content.select_one('.dtl-section').text
+        cred = content.select_one('.detail-credit_html').text[0]
         try:
-            room_time = driver.find_element_by_css_selector('.section--meeting_html > div').text
+            room_time = content.select_one('.section--meeting_html > div').text
         except:
             room_time = 'TBA'
         try:
-            prof = driver.find_element_by_css_selector('.instructor-name').text
+            prof = content.select_one('.instructor-name').text
         except:
             prof = 'TBA'
         data = [code, course_name, cred, prof, room_time]

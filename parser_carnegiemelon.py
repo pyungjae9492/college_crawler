@@ -8,14 +8,16 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import logging
 import openpyxl
+from tkinter import *
+import tkinter.ttk as ttk
 
 
-def get_links():
+def get_links(site_link):
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     driver = webdriver.Chrome('chromedriver.exe', options=options)
     driver.implicitly_wait(3)
-    driver.get('https://enr-apps.as.cmu.edu/open/SOC/SOCServlet/search')
+    driver.get(site_link)
     # 웹이 전부 파싱되기를 기다렸다가 클릭
     WebDriverWait(driver, 30).until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, '#searchbuttons > button.btn.btn-default.form-button.submit-button')))
@@ -80,16 +82,49 @@ if __name__ == '__main__':
         format='%(asctime)s %(levelname)-8s %(message)s',
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
+    
+    root = Tk()
+    root.title('Columbia Crawler')
 
-    links = get_links()
+    def getTextInput():
+        global site_url
+        site_url = text.get(1.0, END+"-1c")
+        root.destroy()
+
+    label = Label(root, text= '긁어올 Url을 입력해주세요')
+    label.pack()
+    text = Text(root, height=10, )
+    text.pack()
+    btnRead=Button(root, height=1, width=10, text="OK", 
+                        command=getTextInput)
+    btnRead.pack()
+    root.mainloop()
+
+    links = get_links(site_url)
     total = len(links)
     counter = 0
     logging.info('total:' + str(total))
     result = []
 
-    for link in links:
-        result.append(get_content(link))
-        counter += 1
-        logging.info("{:.2f}".format((counter / total) * 100))
+    progress = Tk()
+    progress.title('크롤링 진행률')
+    p_var2 = DoubleVar()
+    prog_label = Label(progress, text='크롤링 진행률')
+    prog_label.pack()
+    progressbar2 = ttk.Progressbar(progress, maximum=100, length=150, variable=p_var2)
+    progressbar2.pack()
+    btn = Button(progress, text='시작', command=lambda: crawl(counter=counter, total=total, result=result))
+    btn.pack()
 
-    to_excel(result)
+    def crawl(counter, total, result):
+        for link in links:
+            result.append(get_content(link))
+            counter += 1
+            logging.info("{:.2f}".format((counter / total) * 100))
+            p_var2.set((counter / total)*100)
+            progressbar2.update()
+        to_excel(result)
+        progress.destroy()
+
+    progress.mainloop()
+

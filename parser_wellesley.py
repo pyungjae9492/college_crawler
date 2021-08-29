@@ -8,7 +8,8 @@ from time import sleep
 import pandas as pd
 import logging
 import openpyxl
-
+from tkinter import *
+import tkinter.ttk as ttk
 # 완료
 
 logging.basicConfig(
@@ -16,29 +17,55 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
+root = Tk()
+root.title('Tufts Crawler')
 
-def wellesley_crawl():
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    driver = webdriver.Chrome(
-        'chromedriver.exe', options=options)  # mac의 경우 chromedriver
-    driver.implicitly_wait(3)
-    driver.get('https://courses.wellesley.edu/')
+def getTextInput():
+    global site_url
+    site_url = text.get(1.0, END+"-1c")
+    root.destroy()
 
-    # 로깅을 위한 변수
-    count = 0
-    # 최종 결과물 리스트
-    result = []
+label = Label(root, text= '긁어올 Url을 입력해주세요')
+label.pack()
+text = Text(root, height=10, )
+text.pack()
+btnRead=Button(root, height=1, width=10, text="OK", 
+                    command=getTextInput)
+btnRead.pack()
+root.mainloop()
 
-    every_courses = driver.find_elements_by_css_selector(
-        '#course_listing > section > div > a')
-    total = every_courses.__len__()
-    logging.info("TOTAL " + str(total))
+options = webdriver.ChromeOptions()
+options.add_argument('headless')
+driver = webdriver.Chrome(
+    'chromedriver.exe', options=options)  # mac의 경우 chromedriver
+driver.implicitly_wait(3)
+driver.get(site_url)
 
-    # 클릭하고 해당 과목 크롤링
+
+# 로깅을 위한 변수
+count = 0
+# 최종 결과물 리스트
+result = []
+every_courses = driver.find_elements_by_css_selector(
+    '#course_listing > section > div > a')
+total = len(every_courses)
+logging.info("TOTAL " + str(total))
+# 클릭하고 해당 과목 크롤링
+
+progress = Tk()
+progress.title('크롤링 진행률')
+p_var2 = DoubleVar()
+prog_label = Label(progress, text='크롤링 진행률')
+prog_label.pack()
+progressbar2 = ttk.Progressbar(progress, maximum=100, length=150, variable=p_var2)
+progressbar2.pack()
+btn = Button(progress, text='시작', command=lambda: crawl(every_courses=every_courses, count=count, total=total, result=result))
+btn.pack()
+
+def crawl(every_courses, count, total, result):
     for i in every_courses:
         i.click()
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, f'#data_{ count } > div')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         code = soup.select_one(
@@ -67,21 +94,20 @@ def wellesley_crawl():
         # 진행 상황 로깅
         count += 1
         logging.info("{:.2f}".format((count / total) * 100))
-
+        p_var2.set((count / total)*100)
+        progressbar2.update()
         result.append(data)
+    progress.destroy()
 
-    driver.quit()
-    # 2차원 배열 -> .xlsx
-    result = pd.read_excel('./crawl_results/wellesley(final).xlsx')
-    col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
-    wellesley = pd.DataFrame(result, columns=col_name)
-    wellesley['Days'] = wellesley.Time.str.extract(
-        r'(?<=\:\s)([MTWRFS]+)(?=\s\S\s)')
-    wellesley['Time'] = wellesley.Time.str.extract(
-        r'([0-9]+\:[0-9]+\s[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+)')
-    wellesley = wellesley[['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Days', 'Time']]
-    wellesley.to_excel('./crawl_results/wellesley.xlsx')
-
-
-
-wellesley_crawl()
+progress.mainloop()
+driver.quit()
+# 2차원 배열 -> .xlsx
+result = pd.read_excel('./crawl_results/wellesley(final).xlsx')
+col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
+wellesley = pd.DataFrame(result, columns=col_name)
+wellesley['Days'] = wellesley.Time.str.extract(
+    r'(?<=\:\s)([MTWRFS]+)(?=\s\S\s)')
+wellesley['Time'] = wellesley.Time.str.extract(
+    r'([0-9]+\:[0-9]+\s[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+)')
+wellesley = wellesley[['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Days', 'Time']]
+wellesley.to_excel('./crawl_results/wellesley.xlsx')

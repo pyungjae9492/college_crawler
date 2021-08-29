@@ -12,8 +12,6 @@ import logging
 import openpyxl
 import pyautogui
 
-# 완료
-
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
