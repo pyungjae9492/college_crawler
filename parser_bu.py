@@ -52,6 +52,7 @@ for course in courses:
     url_and_credits.append(a)
 
 result = []
+rejected_url = []
 counter = 0
 total = len(url_and_credits)
 logging.info("TOTAL " + str(total))
@@ -70,27 +71,37 @@ progressbar2.pack()
 btn = Button(progress, text='시작', command=lambda: crawl(counter=counter, total=total, result=result))
 btn.pack()
 
+def requesting(url, failed_num):
+    sleep(1)
+    req = requests.get(url, headers=headers)
+    if failed_num > 4:
+        rejected_url.append(url)
+        return
+    print('request denied!')
+    failed_num += 1
+    requesting(url, failed_num)
+
+
 def crawl(counter, total, result): 
     for url_and_credit in url_and_credits:
         cred = url_and_credit[1][3]
         url = url_and_credit[0]
+        failed_num = 0
         try:
             req = requests.get(url, headers=headers)
         except:
-            print('request denied!')
-            url_and_credits.append(url_and_credit)
-            del url_and_credits[0]
+            requesting(url, failed_num)
             continue
-        del url_and_credits[0]
         sleep(1)
         html = req.text
         soup = BeautifulSoup(html, 'html.parser')
         course_name = soup.select_one('#body-tag > main > div > h1').text
-        sections = soup.select('.table-wrapper > table > tbody > tr')
+        table = soup.select_one('.coursearch-course-section > div > table')
+        sections = table.select('tr')
         del sections[0]
         for section in sections:
             prof = section.select('td')[2].text
-            code = section.select_one('#body-tag > main > div > h6').text + section.select('td')[0].text
+            code = soup.select_one('#body-tag > main > div > h6').text + section.select('td')[0].text
             room = section.select('td')[4].text
             time = section.select('td')[5].text
             data = [code, course_name, cred, prof, room, time]
@@ -99,14 +110,10 @@ def crawl(counter, total, result):
         p_var2.set((counter / int(total)) * 100)
         progressbar2.update()
         result.append(data)
-        if len(url_and_credits) == 0:
-            break
-        else:    
-            crawl(counter, total, result)
     progress.destroy()
 
 progress.mainloop()
 
-col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
+col_name = ['Code', 'Course_Name', 'Credit', 'Professor', 'Room', 'Time']
 bu = pd.DataFrame(result, columns=col_name)
 bu.to_excel('./crawl_results/bu.xlsx')

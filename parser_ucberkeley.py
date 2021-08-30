@@ -72,11 +72,11 @@ def crawl(driver, counter, total, result):
                 '.ls-course-title').text
             cred = course.select_one('.ls-details-units').text
             try:
-                prof = course.select_one('ls-instructors > span:nth-child(2)').text
+                prof = course.select_one('.ls-instructors > span:nth-child(2)').text
             except:
                 prof = 'Not Noticed'
             try:
-                room = course.select_one('.ls-location > a').text
+                room = course.select_one('.ls-location > a').text.strip()
             except:
                 room = 'Not Noticed'
             try:

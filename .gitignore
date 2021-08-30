@@ -11,7 +11,6 @@ __pycache__/
 
 #exe.빌드 관련
 build/
-dist/
 *.spec
 
 #크롤링 결과물
