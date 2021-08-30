@@ -92,12 +92,14 @@ if __name__ == '__main__':
     logging.info('total:' + str(total))
     result = []
 
+    print('크롤링을 시작합니다.')
+
     progress = Tk()
     progress.title('크롤링 진행률')
     p_var2 = DoubleVar()
     prog_label = Label(progress, text='크롤링 진행률')
     prog_label.pack()
-    progressbar2 = ttk.Progressbar(progress, maximum=100, length=150, variable=p_var2)
+    progressbar2 = ttk.Progressbar(progress, maximum=100, length=500, variable=p_var2)
     progressbar2.pack()
     btn = Button(progress, text='시작', command=lambda: crawl(counter=counter, total=total, result=result))
     btn.pack()
@@ -109,9 +111,7 @@ if __name__ == '__main__':
             logging.info("{:.2f}".format((counter / total) * 100))
             p_var2.set((counter / total)*100)
             progressbar2.update()
-        to_excel(result)
         progress.destroy()
+    progress.mainloop()    
 
-    progress.mainloop()
-
-    
+    to_excel(result)

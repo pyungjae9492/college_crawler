@@ -67,12 +67,14 @@ total = len(urls)
 logging.info('Total:' + str(total))
 result = []
 
+print('크롤링을 시작합니다.')
+
 progress = Tk()
 progress.title('크롤링 진행률')
 p_var2 = DoubleVar()
 prog_label = Label(progress, text='크롤링 진행률')
 prog_label.pack()
-progressbar2 = ttk.Progressbar(progress, maximum=100, length=150, variable=p_var2)
+progressbar2 = ttk.Progressbar(progress, maximum=100, length=500, variable=p_var2)
 progressbar2.pack()
 btn = Button(progress, text='시작', command=lambda: crawl(driver=driver, count=count, total=total, result=result))
 btn.pack()

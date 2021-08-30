@@ -19,15 +19,13 @@ logging.basicConfig(
 
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
-driver = webdriver.Chrome('chromedriver.exe', options=options)
+driver = webdriver.Chrome('chromedriver.exe')
 driver.implicitly_wait(3)
-driver.get('https://enr-apps.as.cmu.edu/open/SOC/SOCServlet/search')
+driver.get('https://sa.ucla.edu/ro/public/soc')
 # 웹이 전부 파싱되기를 기다렸다가 클릭
 WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#searchbuttons > button.btn.btn-default.form-button.submit-button')))
-term_select = Select(
-    driver.find_element_by_css_selector('#semester'))
-term_options = driver.find_elements_by_css_selector(
-    '#semester > option')
+term_select = driver.find_element_by_css_selector('#div_subject')
+term_options = driver.find_elements_by_css_selector('#dropdownitems > div')
 
 root = Tk()
 root.title('Carnegiemellon Crawler')
@@ -62,9 +60,6 @@ logging.info('total:' + str(total))
 result = []
 
 driver.quit()
-
-print('크롤링을 시작합니다.')
-
 progress = Tk()
 progress.title('크롤링 진행률')
 p_var2 = DoubleVar()

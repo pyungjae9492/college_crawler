@@ -8,3 +8,12 @@ __pycache__/
 
 #크롬 드라이버
 *.exe
+
+#exe.빌드 관련
+build/
+dist/
+*.spec
+
+#크롤링 결과물
+crawl_results/
+

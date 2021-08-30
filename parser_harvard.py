@@ -52,12 +52,14 @@ driver.find_element_by_css_selector(
 WebDriverWait(driver, 30).until(
     EC.presence_of_element_located((By.CSS_SELECTOR, '#lbContentMain')))
 
+print('크롤링을 시작합니다.')
+
 progress = Tk()
 progress.title('크롤링 진행률')
 p_var2 = DoubleVar()
 prog_label = Label(progress, text='크롤링 진행률')
 prog_label.pack()
-progressbar2 = ttk.Progressbar(progress, maximum=100, length=150, variable=p_var2)
+progressbar2 = ttk.Progressbar(progress, maximum=100, length=500, variable=p_var2)
 progressbar2.pack()
 btn = Button(progress, text='시작', command=lambda: crawl(course_count=course_count, course_total=course_total, result=result))
 btn.pack()

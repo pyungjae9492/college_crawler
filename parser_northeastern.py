@@ -71,16 +71,18 @@ WebDriverWait(driver, 20).until(EC.presence_of_element_located(
     (By.CSS_SELECTOR, '#table1 > tbody > tr:nth-child(50)')))
 
 result = []
-page_count = 1
+page_count = 0
 page_total = driver.find_element_by_css_selector('.total-pages').text
 logging.info('Total:' + page_total)
+
+print('크롤링을 시작합니다.')
 
 progress = Tk()
 progress.title('크롤링 진행률')
 p_var2 = DoubleVar()
 prog_label = Label(progress, text='크롤링 진행률')
 prog_label.pack()
-progressbar2 = ttk.Progressbar(progress, maximum=100, length=150, variable=p_var2)
+progressbar2 = ttk.Progressbar(progress, maximum=100, length=500, variable=p_var2)
 progressbar2.pack()
 btn = Button(progress, text='시작', command=lambda: crawl(driver=driver, page_count=page_count, page_total=page_total, result=result))
 btn.pack()
@@ -121,8 +123,10 @@ def crawl(driver, page_count, page_total, result):
         WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located(
             (By.CSS_SELECTOR, '#table1 > tbody > tr')))
     progress.destroy()
+    driver.quit()
 
 progress.mainloop()
+
 
 col_name = ['Code', 'Course Name', 'Cred', 'Professor', 'Room', 'Days', 'Time']
 northeastern = pd.DataFrame(result, columns=col_name)
