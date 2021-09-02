@@ -52,7 +52,7 @@ for course in courses:
     url_and_credits.append(a)
 
 result = []
-rejected_url = []
+failed_url = []
 counter = 0
 total = len(url_and_credits)
 logging.info("TOTAL " + str(total))
@@ -68,49 +68,59 @@ prog_label = Label(progress, text='크롤링 진행률')
 prog_label.pack()
 progressbar2 = ttk.Progressbar(progress, maximum=100, length=500, variable=p_var2)
 progressbar2.pack()
-btn = Button(progress, text='시작', command=lambda: crawl(counter=counter, total=total, result=result))
+btn = Button(progress, text='시작', command=lambda: crawl(u_and_cs=url_and_credits, counter=counter, total=total, result=result))
 btn.pack()
 
-def requesting(url, failed_num):
-    sleep(1)
-    req = requests.get(url, headers=headers)
-    if failed_num > 4:
-        rejected_url.append(url)
-        return
-    print('request denied!')
-    failed_num += 1
-    requesting(url, failed_num)
-
-
-def crawl(counter, total, result): 
-    for url_and_credit in url_and_credits:
-        cred = url_and_credit[1][3]
-        url = url_and_credit[0]
-        failed_num = 0
+def crawl(u_and_cs, counter, total, result): 
+    for u_and_c in u_and_cs:
+        cred = u_and_c[1][3]
+        url = u_and_c[0]
+        global failed_url
+        failed_url = []
         try:
             req = requests.get(url, headers=headers)
         except:
-            requesting(url, failed_num)
-            continue
-        sleep(1)
+            print('Request Failed! Wait...')
+            try:
+                req = requests.get(url, headers=headers)
+            except:
+                print('Failed Again... Add to Failed Url')
+                failed_url.append(u_and_c)
+                continue
         html = req.text
         soup = BeautifulSoup(html, 'html.parser')
         course_name = soup.select_one('#body-tag > main > div > h1').text
         table = soup.select_one('.coursearch-course-section > div > table')
         sections = table.select('tr')
         del sections[0]
+        data = []
         for section in sections:
-            prof = section.select('td')[2].text
-            code = soup.select_one('#body-tag > main > div > h6').text + section.select('td')[0].text
-            room = section.select('td')[4].text
-            time = section.select('td')[5].text
-            data = [code, course_name, cred, prof, room, time]
+            if len(sections) == 8:
+                prof = section.select('td')[2].text
+                code = soup.select_one('#body-tag > main > div > h6').text + section.select('td')[0].text
+                room = section.select('td')[4].text
+                time = section.select('td')[5].text
+                data = [code, course_name, cred, prof, room, time]
+                result.append(data)
+            elif len(sections) == 4:
+                prof = ''
+                code = ''
+                course_name = ''
+                cred = ''
+                room = section.select('td')[1].text
+                time = section.select('td')[2].text
+                data = [code, course_name, cred, prof, room, time]
+                result.append(data)
         counter += 1
         logging.info("{:.2f}".format((counter / total) * 100))
         p_var2.set((counter / int(total)) * 100)
         progressbar2.update()
-        result.append(data)
-    progress.destroy()
+    if len(failed_url) == 0:
+        print('All Urls are crawled, crawl')
+        progress.destroy()
+        return
+    else:
+        crawl(failed_url, counter, total, result)
 
 progress.mainloop()
 
