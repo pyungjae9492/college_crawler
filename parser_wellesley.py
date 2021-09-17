@@ -18,7 +18,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 
 root = Tk()
-root.title('Tufts Crawler')
+root.title('Wellesley Crawler')
 
 def getTextInput():
     global site_url
@@ -101,12 +101,11 @@ def crawl(every_courses, count, total, result):
 
 progress.mainloop()
 driver.quit()
-# 2차원 배열 -> .xlsx
-result = pd.read_excel('./crawl_results/wellesley(final).xlsx')
+
 col_name = ['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Time']
 wellesley = pd.DataFrame(result, columns=col_name)
 wellesley['Days'] = wellesley.Time.str.extract(
-    r'(?<=\:\s)([MTWRFS]+)(?=\s\S\s)')
+    r'(?<=\:\s)(.+?)(?=\s-\s)')
 wellesley['Time'] = wellesley.Time.str.extract(
     r'([0-9]+\:[0-9]+\s[A-Z]+\s\S\s[0-9]+\:[0-9]+\s[A-Z]+)')
 wellesley = wellesley[['Code', 'Course Name', 'Credit', 'Professor', 'Room', 'Days', 'Time']]

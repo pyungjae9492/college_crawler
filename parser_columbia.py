@@ -1,3 +1,4 @@
+from tkinter.font import ROMAN
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,49 +12,18 @@ import openpyxl
 from tkinter import *
 import tkinter.ttk as ttk
 
-def get_links(driver, site_url):
-    
-    # https://doc.search.columbia.edu/classes/+?semes=20213
-    driver.get(site_url)
-
-    # 웹이 전부 파싱되기를 기다렸다가 클릭
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located(
-        (By.CSS_SELECTOR, '#search-results > li:nth-child(1) > div > h3 > a')))
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    data = []
-    courses = soup.select('#search-results > li')
-    for course in courses:
-        link = course.select_one('div > h3 > a').get('ng-href')
-        code = course.select_one('li > div > div:nth-child(3) > table > tbody > tr > td:nth-child(2)').text
-        prof = course.select_one('div > div:nth-child(3) > table > tbody > tr > td:nth-child(4)').text.strip()
-        course_name = course.select_one('div > h3 > a').text
-        data.append([link, code, prof, course_name])
-    return data
-
-
-def get_content(link, code, prof, course_name, driver):
-    driver.get(link)
-    sleep(1.5)
-    
-    second_row = driver.find_element_by_css_selector(
-        '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(1)').text
-    if second_row == 'Day & Time\nLocation':
-        cred = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(5) > td:nth-child(2)').text
-        meetings = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(2)').text
-        data = [code, course_name, cred, prof, meetings]
-    else:
-        cred = driver.find_element_by_css_selector(
-            '#col-right > table > tbody > tr:nth-child(4) > td:nth-child(2)').text
-        meetings = 'TBA'
-        data = [code, course_name, cred, prof, meetings]
-    return data
-
-
 def to_excel(result):
-    col_name = ['Code', 'Course Name', 'Cred', 'Professor', 'Meetings']
+    col_name = ['Code', 'Course_Name', 'Credit', 'Professor', 'Meetings']
     columbia = pd.DataFrame(result, columns=col_name)
+    columbia['Code'] = columbia.Code.str.extract(
+    r'(?<=/)(\d+$)')
+    columbia['Days'] = columbia.Meetings.str.extract(
+    r'(^.+?)(?=\s\d)')
+    columbia['Room'] = columbia.Meetings.str.extract(
+    r'(?<=am|pm)(\S.+?$)')
+    columbia['Time'] = columbia.Meetings.str.extract(
+    r'(\d+:\d+.+-.+am|\d+:\d+.+-.+pm)')
+    columbia = columbia[['Code', 'Course_Name', 'Credit', 'Professor', 'Room', 'Days', 'Time']]
     columbia.to_excel('./crawl_results/columbia.xlsx')
 
 
@@ -85,9 +55,12 @@ if __name__ == '__main__':
     options.add_argument('headless')
     driver = webdriver.Chrome('chromedriver.exe', options=options)
     driver.implicitly_wait(3)
-
-    data = get_links(driver, site_url)
-    total = len(data)
+    driver.get(site_url)
+    WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located(
+            (By.CSS_SELECTOR, '.courseblock')))
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    courses = soup.select('.courseblock')
+    total = len(courses)
     counter = 0
     logging.info('total:' + str(total))
     result = []
@@ -101,17 +74,27 @@ if __name__ == '__main__':
     prog_label.pack()
     progressbar2 = ttk.Progressbar(progress, maximum=100, length=500, variable=p_var2)
     progressbar2.pack()
-    btn = Button(progress, text='시작', command=lambda: crawl(counter=counter, total=total, result=result))
+    btn = Button(progress, text='시작', command=lambda: crawl(courses=courses, counter=counter, total=total, result=result))
     btn.pack()
 
-    def crawl(counter, total, result):
-        for i in data:
-            result.append(get_content(i[0], i[1], i[2], i[3], driver))
+    def crawl(courses, counter, total, result):
+        for course in courses:
+            course_name = course.select_one('.courseblocktitle > strong:nth-child(1)').text
+            sections = course.select('table > tbody > tr')
+            for section in sections:
+                a = section.select('.unifyRow1') 
+                if a:
+                    code = section.select_one('td:nth-child(2)').text
+                    cred = section.select_one('td:nth-child(5)').text
+                    prof = section.select_one('td:nth-child(4)').text
+                    room_time = section.select_one('td:nth-child(3)').text
+                    data = [code, course_name, cred, prof, room_time]
+                    result.append(data)
             counter += 1
             logging.info("{:.2f}".format((counter / total) * 100))
             p_var2.set((counter / total)*100)
             progressbar2.update()
         progress.destroy()
-    progress.mainloop()    
+    progress.mainloop()  
 
     to_excel(result)

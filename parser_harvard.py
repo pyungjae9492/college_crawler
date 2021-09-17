@@ -84,8 +84,9 @@ def crawl(course_count, course_total, result):
             '.isSCL_LBTop > div.isSCL_LBMTG > div.isSCL_LBLOC').text
         days_list = soup.select(
             '.isSCL_LBTop > div.isSCL_LBMTG > div.isSCL_LBRBM.isSCL_SecCompMTG > ul > li.selected')
-        days = ''
         if len(days_list) != 0:
+            global days
+            days = ''
             for day in days_list:
                 days += (day.text + ' ')
         time = soup.select_one(
@@ -115,6 +116,5 @@ col_name = ['Code', 'Course_Name', 'Credit',
 harvard = pd.DataFrame(result, columns=col_name)
 harvard['Code'] = harvard.Code.str.extract(r'(?<=Class Number:)(.+)')
 harvard['Credit'] = harvard.Credit.str.extract(r'(?<=Units:)(.+)')
-harvard['Days'] = harvard.Days.str.extract(r'(.+)(?=,)')
 harvard['Room'] = harvard.Room.str.extract(r'(.+)(?=\n)')
 harvard.to_excel('./crawl_results/harvard.xlsx')

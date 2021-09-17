@@ -71,6 +71,26 @@ def crawl(counter, total, result):
                         descr = i.text
                         data = [course_name, descr]
                         result.append(data)
+        pages = soup.select('#pagination > a')
+        more_urls = []
+        if pages:
+            del pages[-1]
+            for page in pages:
+                more_urls.append('https://explorecourses.stanford.edu/' + page.get('href'))
+        for more_url in more_urls:
+            req = requests.get(url)
+            html = req.text
+            soup = BeautifulSoup(html, 'html.parser')
+            courses = soup.select('.searchResult')
+            for course in courses:
+                course_name = course.select_one('.courseTitle').text
+                sections = course.select('.sectionContainer')
+                for section in sections:
+                    if section.select_one('h3').text == '2021-2022 Autumn':
+                        for i in section.select('.sectionDetails'):
+                            descr = i.text
+                            data = [course_name, descr]
+                            result.append(data)
         counter += 1
         logging.info("{:.2f}".format((counter / total) * 100))
         p_var2.set((counter / total)*100)
@@ -87,9 +107,9 @@ stanford['Code'] = stanford.Descriptions.str.extract(
 stanford['Credit'] = stanford.Descriptions.str.extract(
     r'(\d+)(?=\s[u][n][i][t][s])')
 stanford['Professor'] = stanford.Descriptions.str.extract(
-    r'(?<=[I][n][s][t][r][u][c][t][o][r][s]\:\s\s)(.+)')
+    r'(?<=Instructors\:\s\s)(.+)')
 stanford['Room'] = stanford.Descriptions.str.extract(
-    r'(?<=[P][M]\s[a][t]\s)(.+)(?=\s[w][i][t][h])')
+    r'(?<=PM\sat\s|AM\sat\s)(.+)(?=\swith)')
 stanford['Days'] = stanford.Descriptions.str.extract(
     r'(?<=\d{2}\/\d{2}\/\d{4}\s.\s\d{2}\/\d{2}\/\d{4}\s)(.+)(?=\s\d+\:\d+\s.+\s\d+\:\d+\s)')
 stanford['Time'] = stanford.Descriptions.str.extract(

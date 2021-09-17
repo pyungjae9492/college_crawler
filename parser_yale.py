@@ -99,8 +99,6 @@ def crawl(driver, counter, total, result):
             progressbar2.update()
         driver.find_element_by_css_selector('body > main > div.panel.panel--2x.panel--kind-details.panel--visible > div > div.panel__head > a.panel__back.icon-link').click()
         sleep(0.1)
-        if counter > 40:
-            break
     progress.destroy()
 
 progress.mainloop()
